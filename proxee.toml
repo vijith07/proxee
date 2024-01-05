@@ -1,0 +1,15 @@
+[proxy]
+listen_address = '127.0.0.1'
+listen_port = 80
+
+[load_balancing]
+method = 'round_robin'
+
+[[backend_servers]]
+address = '127.0.0.1:8080'
+
+[[backend_servers]]
+address = '127.0.0.1:8081'
+
+[[backend_servers]]
+address = '127.0.0.1:8082'
