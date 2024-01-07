@@ -1,10 +1,11 @@
-use tokio::net::{TcpListener, TcpStream};
 use std::sync::Arc;
+use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Mutex;
+
+use crate::load_balancer::LoadBalancer;
 
 mod config;
 mod load_balancer;
-
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -24,14 +25,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         _ => load_balancer::LoadBalancingMethod::RoundRobin,
     };
 
-    let load_balancer = Arc::new(Mutex::new(load_balancer::LoadBalancer::new(
+    let load_balancer = Arc::new(Mutex::new(LoadBalancer::new(
         load_balancing_method,
         config.backend_servers.clone(),
         0,
     )));
 
-    let listener = TcpListener::bind(format!("{}:{}", config.proxy.listen_address, config.proxy.listen_port)).await?;
-
+    let listener = TcpListener::bind(format!(
+        "{}:{}",
+        config.proxy.listen_address, config.proxy.listen_port
+    ))
+    .await?;
     loop {
         let (stream, _) = listener.accept().await?;
         let load_balancer = Arc::clone(&load_balancer);
@@ -48,11 +52,14 @@ async fn handle_client(
     let client_ip = client_stream.peer_addr().unwrap().ip().to_string();
 
     let mut load_balancer_guard = load_balancer.lock().await;
-    let backend_server = load_balancer_guard.get_server(&client_ip)
+    let backend_server = load_balancer_guard
+        .get_server(&client_ip)
         .expect("Failed to get backend server");
     let backend_server_address = backend_server.address.clone();
+    drop(load_balancer_guard);
 
-    let mut backend_stream = TcpStream::connect(backend_server_address).await
+    let mut backend_stream = TcpStream::connect(backend_server_address)
+        .await
         .expect("Failed to connect to backend server");
 
     let (mut reader, mut writer) = client_stream.split();
