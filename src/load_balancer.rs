@@ -31,6 +31,8 @@ impl LoadBalancer {
             current_server_index: AtomicUsize::new(current),
         }
     }
+  
+    
 
     pub fn get_server(&mut self, client_ip: &str) -> Option<&BackendServer> {
         match self.method {
@@ -75,4 +77,14 @@ impl LoadBalancer {
     // fn get_server_least_connections(&self) -> Option<&BackendServer> {
     //     unimplemented!()
     // }
+}
+
+pub fn get_load_balancing_method(method: &str) -> LoadBalancingMethod {
+    match method {
+        "round_robin" => LoadBalancingMethod::RoundRobin,
+        "random" => LoadBalancingMethod::Random,
+        "ip_hash" => LoadBalancingMethod::IPHash,
+        // "least_connections" => LoadBalancingMethod::LeastConnections,
+        _ => LoadBalancingMethod::RoundRobin,
+    }
 }

@@ -3,7 +3,7 @@ listen_address = '127.0.0.1'
 listen_port = 80
 
 [load_balancing]
-method = 'round_robin'
+method = 'random'
 
 [[backend_servers]]
 address = '127.0.0.1:8080'
@@ -13,3 +13,13 @@ address = '127.0.0.1:8081'
 
 [[backend_servers]]
 address = '127.0.0.1:8082'
+
+# metrics server configuration
+[metrics]
+listen_port = 8083
+route = '/metrics'
+allowed_ips = ['127.0.0.1']
+
+
+
+
